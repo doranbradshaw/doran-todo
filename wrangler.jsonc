@@ -1,0 +1,23 @@
+{
+  // Cloudflare Pages project settings. Cloudflare reads this file on both
+  // Git-connected builds and `wrangler pages deploy`.
+  "name": "doran-todo",
+  "compatibility_date": "2026-11-01",
+  "pages_build_output_dir": "dist",
+
+  // The database the sync API talks to. Create it once with
+  //   npx wrangler d1 create doran-todo-db
+  // and paste the "database_id" it prints below.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "doran-todo-db",
+      "database_id": "REPLACE_WITH_YOUR_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ]
+
+  // BOARD_KEY (the passphrase the app asks for) is a SECRET, not set here:
+  //   npx wrangler pages secret put BOARD_KEY --project-name doran-todo
+  // or Cloudflare dashboard → the project → Settings → Variables and Secrets.
+}

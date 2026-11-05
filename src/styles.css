@@ -1,0 +1,235 @@
+@import "tailwindcss";
+
+/* Self-hosted Plus Jakarta Sans (latin subset, woff2 only — ~12 KB per weight).
+   No Google Fonts request at runtime, so the app renders offline with the
+   right typeface and never waits on a third party. */
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/plus-jakarta-sans-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./fonts/plus-jakarta-sans-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./fonts/plus-jakarta-sans-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/plus-jakarta-sans-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./fonts/plus-jakarta-sans-latin-800-normal.woff2") format("woff2");
+}
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-bg: #050505;
+  --color-fg: #f5f5f5;
+  --color-muted: #9a9a9f;
+  --color-faint: #8a8a90;
+  --color-orange: #ff5a00;
+  --color-ink: #0a0a0a;
+  --color-card: #141414;
+  --color-chip: #1a1a1a;
+  --color-line: #2e2e2e;
+  --color-ring: #3d3d3d;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    /* Stop the iOS "rubber band" bounce and pull-to-refresh so it feels native. */
+    overscroll-behavior: none;
+    /* Keep text size stable when the phone rotates. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html,
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+  }
+
+  body {
+    /* Paint under the notch / home indicator, then pad the content back in. */
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    /* Remove the grey flash iOS/Android show when tapping buttons. */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  [role="button"] {
+    /* Kill the 300ms tap delay and accidental double-tap zoom on controls. */
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* iOS zooms into inputs under 16px; keep them at 16px+ so it never does. */
+  input,
+  textarea {
+    font-size: max(1rem, 16px);
+  }
+}
+
+/* When launched from the home screen there is no browser chrome, so the
+   status bar sits over our header. A little extra breathing room helps. */
+@media (display-mode: standalone) {
+  body {
+    padding-top: max(env(safe-area-inset-top), 0.75rem);
+  }
+}
+
+.kicker {
+  max-width: 12.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  color: var(--color-orange);
+}
+
+.display {
+  font-size: clamp(2.55rem, 11.4vw, 3.35rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+}
+
+.fab {
+  position: fixed;
+  z-index: 30;
+  right: max(1.25rem, calc((100vw - 28rem) / 2 + 1.25rem));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  display: grid;
+  width: 4.25rem;
+  height: 4.25rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-orange);
+  color: var(--color-ink);
+  box-shadow: 0 0 32px color-mix(in srgb, var(--color-orange) 65%, transparent);
+}
+
+.fab:active {
+  transform: scale(0.96);
+}
+
+dialog.sheet {
+  width: min(100%, 28rem);
+  max-height: min(92dvh, 40rem);
+  margin: auto auto 0;
+  overflow: auto;
+  border: 0;
+  border-radius: 1.5rem 1.5rem 0 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+}
+
+dialog.sheet > form {
+  /* Keep the Add button above the iPhone home indicator. */
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+}
+
+dialog.sheet::backdrop {
+  background: rgb(0 0 0 / 72%);
+}
+
+.status-note {
+  padding-right: 5.25rem;
+}
+
+.toast {
+  position: fixed;
+  z-index: 40;
+  bottom: calc(6.75rem + env(safe-area-inset-bottom));
+  left: 50%;
+  translate: -50% 0;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-card);
+  color: var(--color-fg);
+  padding: 0.7rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Sits inline under the header so it never covers the + button or a task. */
+.install-banner {
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 1.25rem;
+  background: var(--color-card);
+  padding: 0.85rem 0.85rem 0.85rem 1rem;
+}
+
+.install-banner p {
+  flex: 1;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
+.install-banner strong {
+  display: block;
+  color: var(--color-fg);
+  font-weight: 700;
+}
+
+/* Mic button pulses while the phone is listening. */
+.mic-live {
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-orange) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-orange) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fab:active {
+    transform: none;
+  }
+  .mic-live {
+    animation: none;
+  }
+}
