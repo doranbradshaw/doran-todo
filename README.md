@@ -23,6 +23,16 @@ The small text under the title shows the state: **Synced**, **Syncing**, **Offli
 
 ---
 
+## Current setup (done 2026-11-05)
+
+- Code: https://github.com/doranbradshaw/doran-todo (private), branch `main`
+- Cloudflare Pages project: `doran-todo` → https://doran-todo.pages.dev and https://todo.aquatech.plumbing
+- Database: D1 `doran-todo-db` (id `53eeb339-b805-4d1d-bd6c-8e397da0e15c`), bound as `DB` via `wrangler.jsonc`
+- Secret `BOARD_KEY` set in the Pages project (Settings → Variables and secrets)
+- Every push to `main` rebuilds and redeploys automatically.
+
+The steps below are what was done, kept for reference (or for setting up a second copy).
+
 ## One-time setup on Cloudflare (about 10 minutes)
 
 Because this version has a backend (the `/api/sync` function), it must be deployed
@@ -61,6 +71,8 @@ Commit and push that change.
 ```bash
 npx wrangler d1 migrations apply doran-todo-db --remote
 ```
+
+(Or paste the contents of `migrations/0001_tasks.sql` into the database's **Console** tab in the dashboard.)
 
 ### Step 5 — Create the Pages project from GitHub
 
