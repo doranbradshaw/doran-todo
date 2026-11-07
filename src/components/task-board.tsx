@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { Check, ChevronDown, Cloud, CloudOff, Download, KeyRound, Mic, Palette, Plus, RefreshCw, X } from "lucide-react";
+import { Check, Cloud, CloudOff, KeyRound, Mic, MoreHorizontal, Palette, Plus, RefreshCw, X } from "lucide-react";
 import { InstallPrompt } from "@/components/install-prompt";
 import { type SyncState, loadKey, saveKey, syncOnce } from "@/lib/sync";
 import { useSpeech } from "@/lib/use-speech";
@@ -23,6 +23,19 @@ import {
   taskCode,
   urgentCount,
 } from "@/lib/tasks";
+
+/** How each sync state reads in the ⋯ menu. */
+const SYNC_VIEW: Record<
+  SyncState,
+  { label: string; Icon: typeof Cloud; tone: string; spin?: boolean }
+> = {
+  idle: { label: "Sync", Icon: Cloud, tone: "text-muted" },
+  syncing: { label: "Syncing…", Icon: RefreshCw, tone: "text-muted", spin: true },
+  synced: { label: "Synced", Icon: Cloud, tone: "text-muted" },
+  offline: { label: "Offline · saved here", Icon: CloudOff, tone: "text-muted" },
+  unauthorized: { label: "Sync off · set key", Icon: KeyRound, tone: "text-accent" },
+  error: { label: "Sync problem · retry", Icon: CloudOff, tone: "text-accent" },
+};
 
 type Draft = {
   mode: "create" | "edit";
@@ -223,6 +236,10 @@ export function TaskBoard() {
   const urgentOpen = urgentCount(tasks);
   const visible = sortTasks(tasks.filter((task) => task.list === active));
   const stamp = now ? formatStatus(now) : "TODAY";
+  const syncView = SYNC_VIEW[sync];
+  // Sync is the one thing hidden in the menu that can still need the user,
+  // so the ⋯ button wears a dot when it does.
+  const needsAttention = sync === "unauthorized" || sync === "error";
 
   function toggleDone(id: string) {
     setTasks((current) =>
@@ -369,68 +386,102 @@ export function TaskBoard() {
   return (
     <div className="min-h-dvh bg-bg text-fg">
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-5 pb-32">
-        <header className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-semibold tracking-tight">Doran's To-Do Lists</p>
-            <SyncPill
-              state={sync}
-              onClick={() => (sync === "unauthorized" ? setKeyPrompt(true) : void runSync())}
-            />
-          </div>
-          <div className="flex shrink-0 items-center gap-0.5">
+        {/* Just two controls. Everything else lives behind the ⋯ menu so the
+            top of the screen belongs to the tasks. */}
+        <header className="flex items-center justify-end gap-0.5">
+          <button
+            type="button"
+            className="grid size-11 place-items-center rounded-full text-accent"
+            aria-label={`Switch colour theme (now ${THEME_LABEL[theme]})`}
+            onClick={switchTheme}
+          >
+            <Palette className="size-5" strokeWidth={2.25} />
+          </button>
+          <div className="relative" ref={menuRef}>
             <button
               type="button"
-              className="grid size-11 place-items-center rounded-full text-accent"
-              aria-label={`Switch colour theme (now ${THEME_LABEL[theme]})`}
-              onClick={switchTheme}
+              className="relative grid size-11 place-items-center rounded-full text-fg"
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              aria-label={needsAttention ? "More — sync needs attention" : "More"}
+              onClick={() => setMenuOpen((open) => !open)}
             >
-              <Palette className="size-5" strokeWidth={2.25} />
+              <MoreHorizontal className="size-5" strokeWidth={2.25} />
+              {/* A dot is the only hint left that sync wants something. */}
+              {needsAttention && (
+                <span
+                  className="absolute top-2 right-2 size-2 rounded-full bg-accent"
+                  aria-hidden="true"
+                />
+              )}
             </button>
-            <button
-              type="button"
-              className="grid size-11 place-items-center rounded-full text-fg"
-              aria-label="Download board for handoff"
-              onClick={downloadBoard}
-            >
-              <Download className="size-5" strokeWidth={2.25} />
-            </button>
-            <div className="relative" ref={menuRef}>
-              <button
-                type="button"
-                className="flex h-11 items-center gap-1 rounded-full px-2 text-base font-medium"
-                aria-expanded={menuOpen}
-                aria-haspopup="menu"
-                onClick={() => setMenuOpen((open) => !open)}
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute top-full right-0 z-20 mt-1 w-56 rounded-2xl border border-line bg-card p-1"
               >
-                Share
-                <ChevronDown className="size-4" strokeWidth={2.25} />
-              </button>
-              {menuOpen && (
-                <div
-                  role="menu"
-                  className="absolute top-full right-0 z-20 mt-1 w-52 rounded-2xl border border-line bg-card p-1"
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={cx(
+                    "flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-sm font-semibold",
+                    syncView.tone,
+                  )}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    if (sync === "unauthorized") setKeyPrompt(true);
+                    else void runSync();
+                  }}
                 >
+                  <syncView.Icon
+                    className={cx("size-4 shrink-0", syncView.spin && "animate-spin")}
+                    strokeWidth={2.5}
+                  />
+                  {syncView.label}
+                </button>
+                <div className="my-1 h-px bg-line" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="block w-full rounded-xl px-3 py-3 text-left text-sm font-semibold"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setKeyPrompt(true);
+                  }}
+                >
+                  Board key…
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="block w-full rounded-xl px-3 py-3 text-left text-sm font-semibold"
+                  onClick={copyBoard}
+                >
+                  Copy for Tammy
+                </button>
+                {canShare && (
                   <button
                     type="button"
                     role="menuitem"
                     className="block w-full rounded-xl px-3 py-3 text-left text-sm font-semibold"
-                    onClick={copyBoard}
+                    onClick={shareBoard}
                   >
-                    Copy for Tammy
+                    Share…
                   </button>
-                  {canShare && (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="block w-full rounded-xl px-3 py-3 text-left text-sm font-semibold"
-                      onClick={shareBoard}
-                    >
-                      Share…
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
+                )}
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="block w-full rounded-xl px-3 py-3 text-left text-sm font-semibold"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    downloadBoard();
+                  }}
+                >
+                  Download board
+                </button>
+              </div>
+            )}
           </div>
         </header>
 
@@ -487,15 +538,13 @@ export function TaskBoard() {
           Urgent jumps the line. Everything else runs oldest first, so nothing drags.
         </p>
 
-        <section className="mt-8" aria-label="Open counts">
-          <Stat value={businessOpen} label="Business open" />
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            <Stat value={personalOpen} label="Personal open" />
-            <Stat value={urgentOpen} label="Urgent" />
-          </div>
+        <section className="mt-6 grid grid-cols-3 gap-2" aria-label="Open counts">
+          <Stat value={businessOpen} label="Business" />
+          <Stat value={personalOpen} label="Personal" />
+          <Stat value={urgentOpen} label="Urgent" highlight={urgentOpen > 0} />
         </section>
 
-        <div className="mt-7 h-px bg-line" />
+        <div className="mt-5 h-px bg-line" />
 
         <div className="mt-6 flex flex-col items-start gap-3" role="tablist" aria-label="Lists">
           <ListTab
@@ -711,37 +760,28 @@ export function TaskBoard() {
   );
 }
 
-function SyncPill({ state, onClick }: { state: SyncState; onClick: () => void }) {
-  const view: Record<SyncState, { label: string; Icon: typeof Cloud; tone: string; spin?: boolean }> = {
-    idle: { label: "Sync", Icon: Cloud, tone: "text-faint" },
-    syncing: { label: "Syncing", Icon: RefreshCw, tone: "text-faint", spin: true },
-    synced: { label: "Synced", Icon: Cloud, tone: "text-faint" },
-    offline: { label: "Offline · saved", Icon: CloudOff, tone: "text-faint" },
-    unauthorized: { label: "Sync off · set key", Icon: KeyRound, tone: "text-accent" },
-    error: { label: "Sync problem · retry", Icon: CloudOff, tone: "text-accent" },
-  };
-  const { label, Icon, tone, spin } = view[state];
+function Stat({
+  value,
+  label,
+  highlight,
+}: {
+  value: number;
+  label: string;
+  highlight?: boolean;
+}) {
   return (
-    <button
-      type="button"
-      className={cx(
-        "mt-0.5 flex h-6 w-full min-w-0 items-center gap-1 text-[0.7rem] font-semibold tracking-wide whitespace-nowrap uppercase",
-        tone,
-      )}
-      onClick={onClick}
-      aria-live="polite"
-    >
-      <Icon className={cx("size-3.5 shrink-0", spin && "animate-spin")} strokeWidth={2.5} />
-      <span className="truncate">{label}</span>
-    </button>
-  );
-}
-
-function Stat({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="border-l-2 border-accent pl-4">
-      <p className="text-5xl leading-none font-medium">{value}</p>
-      <p className="mt-2 text-xs font-medium tracking-widest text-muted uppercase">{label}</p>
+    <div className="rounded-2xl border border-line bg-card px-2 py-2.5 text-center">
+      <p
+        className={cx(
+          "text-2xl leading-none font-semibold",
+          highlight ? "text-accent" : "text-fg",
+        )}
+      >
+        {value}
+      </p>
+      <p className="mt-1.5 text-[0.62rem] font-bold tracking-widest text-muted uppercase">
+        {label}
+      </p>
     </div>
   );
 }
