@@ -546,7 +546,7 @@ export function TaskBoard() {
 
         <div className="mt-5 h-px bg-line" />
 
-        <div className="mt-6 flex flex-col items-start gap-3" role="tablist" aria-label="Lists">
+        <div className="mt-4 grid grid-cols-2 gap-2" role="tablist" aria-label="Lists">
           <ListTab
             list="business"
             count={businessOpen}
@@ -803,7 +803,9 @@ function ListTab({
       role="tab"
       aria-selected={selected}
       className={cx(
-        "h-12 rounded-full px-6 text-sm font-extrabold tracking-widest uppercase",
+        // Sized to keep "PERSONAL · 0" on one line in a half-width pill on a
+        // 320px phone, which is the tightest case.
+        "h-12 w-full rounded-full px-2 text-[0.8rem] font-extrabold tracking-wide whitespace-nowrap uppercase",
         selected ? "bg-accent text-ink" : "border border-ring text-fg",
       )}
       onClick={() => onSelect(list)}
