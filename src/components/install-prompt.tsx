@@ -84,7 +84,7 @@ export function InstallPrompt() {
 
   return (
     <div className="install-banner" role="dialog" aria-label="Install this app">
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-orange text-ink">
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent text-ink">
         <Share className="size-5" strokeWidth={2.5} />
       </span>
       <p>
@@ -96,7 +96,7 @@ export function InstallPrompt() {
       {deferred && (
         <button
           type="button"
-          className="h-10 shrink-0 rounded-full bg-orange px-4 text-xs font-extrabold tracking-widest text-ink uppercase"
+          className="h-10 shrink-0 rounded-full bg-accent px-4 text-xs font-extrabold tracking-widest text-ink uppercase"
           onClick={install}
         >
           Install

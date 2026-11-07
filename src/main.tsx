@@ -1,9 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
+import { applyTheme, loadTheme } from "@/lib/theme";
 // styles.css also declares the self-hosted font (see src/fonts).
 import "./styles.css";
 import { TaskBoard } from "@/components/task-board";
+
+// Paint the saved colour theme before React renders, so there is no flash.
+applyTheme(loadTheme());
 
 // Service worker: caches the app shell so it opens instantly and offline.
 // autoUpdate = new deploys are picked up silently on the next launch.

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { Check, ChevronDown, Cloud, CloudOff, Download, KeyRound, Mic, Plus, RefreshCw, X } from "lucide-react";
+import { Check, ChevronDown, Cloud, CloudOff, Download, KeyRound, Mic, Palette, Plus, RefreshCw, X } from "lucide-react";
 import { InstallPrompt } from "@/components/install-prompt";
 import { type SyncState, loadKey, saveKey, syncOnce } from "@/lib/sync";
 import { useSpeech } from "@/lib/use-speech";
+import { type Theme, THEME_LABEL, applyTheme, loadTheme, nextTheme, saveTheme } from "@/lib/theme";
 import {
   PRIORITIES,
   SEED,
@@ -78,6 +79,7 @@ export function TaskBoard() {
   const [keyInput, setKeyInput] = useState("");
   const [keyPrompt, setKeyPrompt] = useState(false);
   const [sync, setSync] = useState<SyncState>("idle");
+  const [theme, setTheme] = useState<Theme>(loadTheme);
   const menuRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -297,6 +299,14 @@ export function TaskBoard() {
     setDraft(null);
   }
 
+  function switchTheme() {
+    const next = nextTheme(theme);
+    setTheme(next);
+    applyTheme(next);
+    saveTheme(next);
+    setToast(`${THEME_LABEL[next]} theme`);
+  }
+
   function submitKey() {
     const next = keyInput.trim();
     if (!next) return;
@@ -360,14 +370,22 @@ export function TaskBoard() {
     <div className="min-h-dvh bg-bg text-fg">
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-5 pb-32">
         <header className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-base font-semibold tracking-tight">Doran's To-Do Lists</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-base font-semibold tracking-tight">Doran's To-Do Lists</p>
             <SyncPill
               state={sync}
               onClick={() => (sync === "unauthorized" ? setKeyPrompt(true) : void runSync())}
             />
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-0.5">
+            <button
+              type="button"
+              className="grid size-11 place-items-center rounded-full text-accent"
+              aria-label={`Switch colour theme (now ${THEME_LABEL[theme]})`}
+              onClick={switchTheme}
+            >
+              <Palette className="size-5" strokeWidth={2.25} />
+            </button>
             <button
               type="button"
               className="grid size-11 place-items-center rounded-full text-fg"
@@ -424,7 +442,7 @@ export function TaskBoard() {
               submitKey();
             }}
           >
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-orange text-ink">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent text-ink">
               <KeyRound className="size-5" strokeWidth={2.5} />
             </span>
             <p>
@@ -447,11 +465,11 @@ export function TaskBoard() {
                 autoComplete="current-password"
                 placeholder="Board key"
                 aria-label="Board key"
-                className="h-11 min-w-0 flex-1 rounded-full border border-line bg-bg px-4 text-base text-fg outline-none placeholder:text-faint focus:border-orange"
+                className="h-11 min-w-0 flex-1 rounded-full border border-line bg-bg px-4 text-base text-fg outline-none placeholder:text-faint focus:border-accent"
               />
               <button
                 type="submit"
-                className="h-11 shrink-0 rounded-full bg-orange px-5 text-xs font-extrabold tracking-widest text-ink uppercase"
+                className="h-11 shrink-0 rounded-full bg-accent px-5 text-xs font-extrabold tracking-widest text-ink uppercase"
               >
                 Save
               </button>
@@ -463,7 +481,7 @@ export function TaskBoard() {
 
         <p className="kicker mt-8">Doran Bradshaw · Task Board</p>
         <h1 className="display mt-4">
-          GET IT <span className="text-orange">DONE.</span>
+          GET IT <span className="text-accent">DONE.</span>
         </h1>
         <p className="mt-4 max-w-sm text-base leading-relaxed text-muted">
           Urgent jumps the line. Everything else runs oldest first, so nothing drags.
@@ -494,12 +512,12 @@ export function TaskBoard() {
           />
         </div>
 
-        <ul className="mt-6 flex flex-col gap-4">
+        <ul className="mt-5 flex flex-col gap-2">
           {visible.length === 0 && (
             <li className="rounded-3xl border border-dashed border-line px-5 py-10 text-center">
               <p className="text-lg font-semibold">Nothing on {active} yet.</p>
               <p className="mt-2 text-sm leading-relaxed text-muted">
-                Hit the orange plus and choose {active === "business" ? "Business" : "Personal"}.
+                Hit the plus button and choose {active === "business" ? "Business" : "Personal"}.
               </p>
             </li>
           )}
@@ -515,7 +533,7 @@ export function TaskBoard() {
         </ul>
 
         <p className="status-note mt-8 text-sm leading-relaxed">
-          <span className="font-extrabold tracking-wide text-orange uppercase">
+          <span className="font-extrabold tracking-wide text-accent uppercase">
             Status as of {stamp}.
           </span>{" "}
           <span className="text-muted">
@@ -572,7 +590,7 @@ export function TaskBoard() {
                     className={cx(
                       "h-11 flex-1 rounded-full text-sm font-bold tracking-widest uppercase",
                       draft.list === list
-                        ? "bg-orange text-ink"
+                        ? "bg-accent text-ink"
                         : "border border-ring text-fg",
                     )}
                     onClick={() => setDraft({ ...draft, list })}
@@ -596,9 +614,9 @@ export function TaskBoard() {
                 autoFocus
                 placeholder={speech.status === "listening" ? "Listening…" : "What needs doing?"}
                 className={cx(
-                  "w-full rounded-2xl border bg-card py-3 pl-4 text-base text-fg outline-none placeholder:text-faint focus:border-orange",
+                  "w-full rounded-2xl border bg-card py-3 pl-4 text-base text-fg outline-none placeholder:text-faint focus:border-accent",
                   speech.status === "unsupported" ? "pr-4" : "pr-14",
-                  speech.status === "listening" ? "border-orange" : "border-line",
+                  speech.status === "listening" ? "border-accent" : "border-line",
                 )}
               />
               {speech.status !== "unsupported" && (
@@ -606,7 +624,7 @@ export function TaskBoard() {
                   type="button"
                   className={cx(
                     "mic absolute top-1/2 right-1.5 grid size-10 -translate-y-1/2 place-items-center rounded-full",
-                    speech.status === "listening" ? "mic-live bg-orange text-ink" : "text-muted",
+                    speech.status === "listening" ? "mic-live bg-accent text-ink" : "text-muted",
                   )}
                   aria-label={speech.status === "listening" ? "Stop listening" : "Speak the task"}
                   aria-pressed={speech.status === "listening"}
@@ -628,7 +646,7 @@ export function TaskBoard() {
                     className={cx(
                       "h-11 rounded-full text-sm font-bold tracking-widest",
                       draft.priority === item.value
-                        ? "bg-orange text-ink"
+                        ? "bg-accent text-ink"
                         : "border border-ring text-fg",
                     )}
                     onClick={() => setDraft({ ...draft, priority: item.value })}
@@ -653,7 +671,7 @@ export function TaskBoard() {
               <span
                 className={cx(
                   "relative h-7 w-12 shrink-0 rounded-full",
-                  draft.urgent ? "bg-orange" : "bg-ring",
+                  draft.urgent ? "bg-accent" : "bg-ring",
                 )}
               >
                 <span
@@ -667,7 +685,7 @@ export function TaskBoard() {
 
             <button
               type="submit"
-              className="mt-6 h-12 w-full rounded-full bg-orange text-sm font-extrabold tracking-widest text-ink uppercase"
+              className="mt-6 h-12 w-full rounded-full bg-accent text-sm font-extrabold tracking-widest text-ink uppercase"
             >
               {draft.mode === "create" ? "Add to board" : "Save changes"}
             </button>
@@ -698,27 +716,30 @@ function SyncPill({ state, onClick }: { state: SyncState; onClick: () => void })
     idle: { label: "Sync", Icon: Cloud, tone: "text-faint" },
     syncing: { label: "Syncing", Icon: RefreshCw, tone: "text-faint", spin: true },
     synced: { label: "Synced", Icon: Cloud, tone: "text-faint" },
-    offline: { label: "Offline · saved here", Icon: CloudOff, tone: "text-faint" },
-    unauthorized: { label: "Sync off · tap to set key", Icon: KeyRound, tone: "text-orange" },
-    error: { label: "Sync problem · tap to retry", Icon: CloudOff, tone: "text-orange" },
+    offline: { label: "Offline · saved", Icon: CloudOff, tone: "text-faint" },
+    unauthorized: { label: "Sync off · set key", Icon: KeyRound, tone: "text-accent" },
+    error: { label: "Sync problem · retry", Icon: CloudOff, tone: "text-accent" },
   };
   const { label, Icon, tone, spin } = view[state];
   return (
     <button
       type="button"
-      className={cx("mt-0.5 flex h-6 items-center gap-1 text-[0.7rem] font-semibold tracking-wide uppercase", tone)}
+      className={cx(
+        "mt-0.5 flex h-6 w-full min-w-0 items-center gap-1 text-[0.7rem] font-semibold tracking-wide whitespace-nowrap uppercase",
+        tone,
+      )}
       onClick={onClick}
       aria-live="polite"
     >
-      <Icon className={cx("size-3.5", spin && "animate-spin")} strokeWidth={2.5} />
-      {label}
+      <Icon className={cx("size-3.5 shrink-0", spin && "animate-spin")} strokeWidth={2.5} />
+      <span className="truncate">{label}</span>
     </button>
   );
 }
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="border-l-2 border-orange pl-4">
+    <div className="border-l-2 border-accent pl-4">
       <p className="text-5xl leading-none font-medium">{value}</p>
       <p className="mt-2 text-xs font-medium tracking-widest text-muted uppercase">{label}</p>
     </div>
@@ -743,7 +764,7 @@ function ListTab({
       aria-selected={selected}
       className={cx(
         "h-12 rounded-full px-6 text-sm font-extrabold tracking-widest uppercase",
-        selected ? "bg-orange text-ink" : "border border-ring text-fg",
+        selected ? "bg-accent text-ink" : "border border-ring text-fg",
       )}
       onClick={() => onSelect(list)}
     >
@@ -765,55 +786,58 @@ function TaskCard({
 }) {
   const number = String(index).padStart(2, "0");
   return (
-    <li className={cx("rounded-3xl border border-line bg-card px-3 py-3", task.done && "opacity-75")}>
-      <div className="flex items-center">
+    <li className={cx("rounded-2xl border border-line bg-card", task.done && "opacity-60")}>
+      <div className="flex items-start">
+        {/* 44px tap target (the accessible minimum) around a smaller box. */}
         <button
           type="button"
           role="checkbox"
           aria-checked={task.done}
           aria-label={task.done ? `Reopen ${task.title}` : `Mark ${task.title} done`}
-          className="grid size-11 place-items-center"
+          className="grid size-11 shrink-0 place-items-center"
           onClick={onToggle}
         >
           <span
             className={cx(
-              "grid size-7 place-items-center rounded-md border-2",
-              task.done ? "border-orange bg-orange text-ink" : "border-ring bg-transparent",
+              "grid size-6 place-items-center rounded-md border-2",
+              task.done ? "border-accent bg-accent text-ink" : "border-ring bg-transparent",
             )}
           >
             {task.done && <Check className="size-4" strokeWidth={3} />}
           </span>
         </button>
-        <span className="text-xl font-extrabold text-orange">{number}</span>
-      </div>
-      <button
-        type="button"
-        className="block w-full px-2 pt-1 pb-2 text-left"
-        aria-label={`Edit ${task.title}`}
-        onClick={onEdit}
-      >
-        <p
-          className={cx(
-            "text-xl leading-snug font-semibold",
-            task.done && "text-muted line-through",
-          )}
+        <button
+          type="button"
+          className="min-w-0 flex-1 py-2.5 pr-3 text-left"
+          aria-label={`Edit ${task.title}`}
+          onClick={onEdit}
         >
-          {task.title}
-        </p>
-        <p className="mt-3 text-xs font-medium tracking-widest text-faint uppercase">
-          {taskCode(task)} · Added {formatAdded(task.createdAt)}
-        </p>
-        <span className="mt-3 flex flex-wrap gap-2">
-          <span className="rounded-full border border-line bg-chip px-3 py-1.5 text-xs font-semibold tracking-widest">
-            {priorityLabel(task.priority)}
-          </span>
-          {task.urgent && !task.done && (
-            <span className="rounded-full border border-orange px-3 py-1.5 text-xs font-semibold tracking-widest text-orange">
-              Urgent
-            </span>
-          )}
-        </span>
-      </button>
+          <p
+            className={cx(
+              "text-base leading-snug font-semibold",
+              task.done && "text-muted line-through",
+            )}
+          >
+            {task.title}
+          </p>
+          {/* Everything that used to need three stacked rows, on one line. */}
+          <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[0.68rem] font-semibold tracking-wider text-faint uppercase">
+            <span className="text-accent">{number}</span>
+            <span aria-hidden="true">·</span>
+            <span>{taskCode(task)}</span>
+            <span aria-hidden="true">·</span>
+            <span>{priorityLabel(task.priority)}</span>
+            {task.urgent && !task.done && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="text-accent">Urgent</span>
+              </>
+            )}
+            <span aria-hidden="true">·</span>
+            <span>{formatAdded(task.createdAt)}</span>
+          </p>
+        </button>
+      </div>
     </li>
   );
 }

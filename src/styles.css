@@ -39,18 +39,44 @@
   src: url("./fonts/plus-jakarta-sans-latin-800-normal.woff2") format("woff2");
 }
 
+/* ---------------------------------------------------------------------------
+   THEMES
+   Every colour below is a variable, and the Tailwind classes (bg-accent,
+   text-fg, border-line …) all read those variables. So a whole new look is
+   just a second block that redefines them — nothing else in the app changes.
+   The <html> element carries data-theme="orange" or "green"; see theme.ts.
+   To make one the permanent default, change DEFAULT_THEME in src/lib/theme.ts.
+--------------------------------------------------------------------------- */
+
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* ORANGE — the original look, and the default. */
   --color-bg: #050505;
   --color-fg: #f5f5f5;
   --color-muted: #9a9a9f;
   --color-faint: #8a8a90;
-  --color-orange: #ff5a00;
+  --color-accent: #ff5a00;
   --color-ink: #0a0a0a;
   --color-card: #141414;
   --color-chip: #1a1a1a;
   --color-line: #2e2e2e;
   --color-ring: #3d3d3d;
+}
+
+/* GREEN — sampled from the Trim Trading card: deep navy-black surfaces
+   with a bright lime accent and cool-white text. */
+[data-theme="green"] {
+  --color-bg: #05080f;
+  --color-fg: #f0f6fc;
+  --color-muted: #9caec0;
+  --color-faint: #7b8da1;
+  --color-accent: #b4fc48;
+  --color-ink: #071018;
+  --color-card: #0d1322;
+  --color-chip: #151d30;
+  --color-line: #1e2838;
+  --color-ring: #2c3a4e;
 }
 
 @layer base {
@@ -115,7 +141,7 @@
   letter-spacing: 0.16em;
   line-height: 1.35;
   text-transform: uppercase;
-  color: var(--color-orange);
+  color: var(--color-accent);
 }
 
 .display {
@@ -135,9 +161,9 @@
   height: 4.25rem;
   place-items: center;
   border-radius: 999px;
-  background: var(--color-orange);
+  background: var(--color-accent);
   color: var(--color-ink);
-  box-shadow: 0 0 32px color-mix(in srgb, var(--color-orange) 65%, transparent);
+  box-shadow: 0 0 32px color-mix(in srgb, var(--color-accent) 65%, transparent);
 }
 
 .fab:active {
@@ -218,10 +244,10 @@ dialog.sheet::backdrop {
 @keyframes mic-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-orange) 55%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 55%, transparent);
   }
   50% {
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-orange) 0%, transparent);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-accent) 0%, transparent);
   }
 }
 
